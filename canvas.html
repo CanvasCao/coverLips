@@ -25,7 +25,7 @@
             height: 200px;
         }
 
-        #osCanvas1{
+        #osCanvas1 {
             display: none;
         }
     </style>
@@ -43,20 +43,20 @@
 
 <span>img</span>
 <img width="400" height='300'/>
-<button>生成PNG</button>
+<button>上传</button>
 
 <script src="http://apps.bdimg.com/libs/jquery/1.8.3/jquery.min.js"></script>
-<script src='controller/controller.js'></script>
+<script src='js/controller/controller.js'></script>
+<script src='js/canvasFns.js'></script>
+<script src='js/searchToJson/searchToJson.js'></script>
 <script>
     onload = function () {
-        function windowToCanvas(canvas, clientX, clientY) {
-            var boundingRect = canvas.getBoundingClientRect();
-            return {
-                //鼠标的x-boundingRect的x
-                x: (clientX - boundingRect.left) / (boundingRect.width / canvas.width), //boundingRect.width/canvas.width就是放大的倍数
-                y: (clientY - boundingRect.top) / (boundingRect.height / canvas.height)
-            }
+        window.searchJson = searchJson = window.location.search.searchToJson();
+        if (!searchJson.imgurl) {
+            alert('一定要从搜索页跳转过来,不然不能用的哟~');
+            return;
         }
+
 
         var canvas = document.getElementById('canvas'); //合成canvas
         var context = canvas.getContext('2d');//d必须小写
@@ -122,7 +122,7 @@
                             dy = e.clientY - mouseDown.y;
 
                             context.clearRect(0, 0, canvas.width, canvas.height);
-                            osContext2.drawImage(imgLoadedJson.lips, 0, 0, 760, 625, lipsPosition.x+dx, lipsPosition.y+dy, 760, 625);
+                            osContext2.drawImage(imgLoadedJson.lips, 0, 0, 760, 625, lipsPosition.x + dx, lipsPosition.y + dy, 760, 625);
                             drawPng();
                         }
                     }

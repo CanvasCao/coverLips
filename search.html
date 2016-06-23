@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            text-decoration: none;
+            list-style: none;
+            font-family: '微软雅黑';
+        }
+
+        body {
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+        li {
+            border: 1px solid #646464;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        li:hover {
+            background-color: #dddddd;
+        }
+
+        .titleClick {
+            background-color: lightblue;
+        }
+
+        .imgClick {
+            border: 5px solid red;
+            box-sizing: border-box;
+        }
+
+        .titleList {
+            margin: 10px 0px;
+        }
+
+        .imgList li {
+            display: inline-block;
+        }
+
+        .imgList img {
+            width: 60px;
+            display: inline-block;
+            vertical-align: bottom;
+        }
+
+        .imgList button {
+            display: block;
+            height: 50px;
+        }
+    </style>
+
+</head>
+<body>
+<input type="text" class='searchInput' value='Search Me AngelaBaby!'/>
+<button class='searchBtn'>开始搜索了哟~</button>
+<ul class='titleList'></ul>
+<ul class="imgList"></ul>
+
+
+<script src="http://apps.bdimg.com/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src='js/jimiHost.js'></script>
+<script>
+    $(function () {
+        $('.searchInput').focus(function () {
+            $(this).val('');
+        });
+
+        $('.searchBtn').click(function () {
+            var val = $('.searchInput').val();
+            ClearList($('.titleList'), $('.imgList'));
+
+            $.ajax({
+                type: "get",
+                url: jimiHost + '/Lip/meizhuangshishe.php?type=1&pName=' + val,
+//                url: 'package.json',
+                dataType: "jsonp",
+                jsonp: "callback",
+                jsonpCallback: "jsonpcallback",
+                success: function (data) {
+//                    console.log(JSON.stringify(data));
+                    if (!data) {
+                        AppendNoData($('.titleList'));
+                        return;
+                    }
+                    var arr = data.data;
+                    AppendTitleData(arr);
+                    BindTitleEvent();
+
+                },
+                error: function (err) {
+                    console.log('ERROR!');
+                    console.log(err);
+                }
+            });
+        });
+
+
+        //fns...............................................................
+        function ClearList() {
+            [].forEach.call(arguments, function (e, i, arr) {
+                e.html('');
+            });
+        }
+
+        function AppendNoData($dom) {
+            $dom.append('<li>无数据</li>');
+        }
+
+        function AppendTitleData(arr) {
+            [].forEach.call(arr, function (e, i, arr) {
+                $('.titleList').append('<li data-id=' + e.id + '>' + e.title + '</li>')
+            });
+        }
+
+        function BindTitleEvent() {
+            //bindEvent...................................................................
+            $('.titleList li').click(function () {
+                $(this).addClass('titleClick').siblings().removeClass('titleClick');
+            });
+
+            $('.titleList li').click(function () {
+                ClearList($('.imgList'));
+                var id = $(this).attr('data-id');
+
+                $.ajax({
+                    type: "get",
+                    url: jimiHost + '/Lip/meizhuangshishe.php?type=2&id=' + id,
+//                url: 'package.json',
+                    dataType: "jsonp",
+                    jsonp: "callback",
+                    jsonpCallback: "jsonpcallback",
+                    success: function (data) {
+                        console.log(JSON.stringify(data));
+                        if (!data) {
+                            return;
+                        }
+
+                        var arr = data.data.pic;
+                        AppendImgData(arr);
+                    },
+                    error: function (err) {
+                        console.log('ERROR!');
+                        console.log(err);
+                    }
+                });
+            });
+        }
+
+        function BindImgEvent() {
+            $('.imgList li').click(function () {
+                $(this).addClass('imgClick').siblings('li').removeClass('imgClick');
+            });
+
+            $('.startCombine').click(function () {
+                var len = ( $('.imgList').find('.imgClick').length);
+                if (len == 0) {
+                    alert('你还没有选图片哟~');
+                }
+                else {
+                    var src = ($('.imgList').find('.imgClick img').attr('src'));
+                    window.open('canvas.html?imgurl='+src);
+                }
+            })
+        }
+
+        function AppendTitleData(arr) {
+            [].forEach.call(arr, function (e, i, arr) {
+                $('.titleList').append('<li data-id=' + e.id + '>' + e.title + '</li>')
+            });
+        }
+
+        function AppendImgData(arr) {
+            [].forEach.call(arr, function (e, i, arr) {
+                $('.imgList').append('<li><img  src="http://' + e + '" /></li>')
+            });
+
+            $('.imgList').append('<button class="startCombine">点我开始合成了哟~</button>');
+
+            BindImgEvent();
+        }
+    })
+</script>
+</body>
+</html>
