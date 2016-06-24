@@ -66,8 +66,12 @@
 
 <script src="http://apps.bdimg.com/libs/jquery/1.8.3/jquery.min.js"></script>
 <script src='js/jimiHost.js'></script>
+<script src='js/searchToJson/searchToJson.js'></script>
 <script>
     $(function () {
+
+        window.searchJson = searchJson = window.location.search.searchToJson();
+
         $('.searchInput').focus(function () {
             $(this).val('');
         });
@@ -165,7 +169,7 @@
                 }
                 else {
                     var src = ($('.imgList').find('.imgClick img').attr('src'));
-                    window.open('canvas.html?imgurl='+src);
+                    window.open('canvas.html?imgurl='+src+'&objid='+searchJson.objid);
                 }
             })
         }
@@ -178,7 +182,7 @@
 
         function AppendImgData(arr) {
             [].forEach.call(arr, function (e, i, arr) {
-                $('.imgList').append('<li><img  src="http://' + e + '" /></li>')
+                $('.imgList').append('<li><img  src=' + e + ' /></li>')
             });
 
             $('.imgList').append('<button class="startCombine">点我开始合成了哟~</button>');

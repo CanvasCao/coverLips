@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            box-sizing: border-box;
+
+        }
+
+        canvas {
+            background: transparent;
+            border: thin inset #aaa;
+
+        }
+
+        #osCon {
+            position: relative;
+            width: 400px;
+            height: 200px;
+        }
+
+        #osCan1 {
+            position: absolute;
+            top: 0;
+            z-index: 2;
+            opacity: 1;
+        }
+
+        #osCan2 {
+            top: 0;
+            /*z-index: 3;*/
+            position: absolute;
+
+        }
+
+        #uiCan {
+
+        }
+
+        #btnCollection {
+
+        }
+
+        button {
+            height: 50px;
+            display: inline-block;
+            width: 190px;
+        }
+
+    </style>
+
+</head>
+<body>
+<!--离屏1画路径 离屏2画背景-->
+<div id='osCon'>
+    <canvas id='osCan1' width="400px" height='200px'></canvas>
+    <canvas id='osCan2' width="400px" height='200px'></canvas>
+</div>
+<canvas id='uiCan' width="400px" height='200px'></canvas>
+<img src=""/>
+
+<div id='btnCollection'>
+    <button id='combine'>合成</button>
+    <button id='upload'>上传</button>
+</div>
+
+
+<script src="http://apps.bdimg.com/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src='js/jquery.mousewheel.min.js'></script>
+<script src='js/controller/controller.js'></script>
+<script src='js/canvasFns.js'></script>
+<script src='js/searchToJson/searchToJson.js'></script>
+<script>
+    onload = function () {
+        window.searchJson = searchJson = window.location.search.searchToJson();
+        if (!searchJson.imgurl) {
+            alert('一定要从搜索页跳转过来,不然不能用的哟~');
+            return;
+        }
+
+        //dom......................................................................
+        //离屏1画路径 离屏2画背景
+        var uiCan = document.getElementById('uiCan');
+        var uiCtx = uiCan.getContext('2d');
+        var osCan1 = document.getElementById('osCan1');
+        var osCtx1 = osCan1.getContext('2d');
+        var osCan2 = document.getElementById('osCan2');
+        var osCtx2 = osCan2.getContext('2d');
+        var domImg = document.getElementsByTagName('img')[0];
+
+
+        //imgSource................................................................
+        var imgArr = [
+            {"name": "path", "src": "img/path.png"},
+            {"name": "background","src": "img/lips.jpg"},
+        ];
+
+        //paras...
+        var staticParas = {w: 400, h: 200};
+        var pathParas = {x: 0, y: 0, RATE: 1, w: 417, h: 208};
+        var backgroundParas = {x: 0, y: 0, RATE: 2, w: 1000, h: 1000};
+        var bgParas = backgroundParas;
+
+        //mousemoveparas...
+        var mouseDown = {x: 0, y: 0};
+        var dx=0, dy=0;
+        var ifDragging = false;
+        var dataUrl;
+
+        //加载完的图片
+        var imgLoadedJson = {};
+        var loadedImgNum = 0;
+        [].forEach.call(imgArr, function (e, i, arr) {
+            var image = new Image();
+            image.src = e.src;
+            var name = e.name;
+
+            image.onload = function () {
+                loadedImgNum++;
+                imgLoadedJson[name] = image;
+                if (loadedImgNum == imgArr.length) {
+
+
+                    //Start.........................................................
+                    //图片加载完 source有了..............
+                    //先把path取反选区保存起来............................................................................
+                    osCtx1.drawImage(imgLoadedJson.path, 0, 0, pathParas.w, pathParas.h, pathParas.x, pathParas.y, pathParas.w, pathParas.h);
+                    osCtx2.drawImage(imgLoadedJson.background, 0, 0, bgParas.w, bgParas.h, bgParas.x, bgParas.y, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
+
+                    var dataUrl = osCan2.toDataURL("image/png");
+                    console.log(dataUrl);
+                    localStorage.setItem("jimiImg", dataUrl);
+                    domImg.setAttribute("src", localStorage.getItem("jimiImg"));
+                    osCtx2.drawImage(domImg, 0, 0, bgParas.w, bgParas.h, bgParas.x, bgParas.y, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
+
+
+                    //修改了osData1..........
+                    var osData1 = osCtx1.getImageData(0, 0, staticParas.w, staticParas.h);
+                    [].forEach.call(osData1.data, function (e, i, arr) {
+                        if (i % 4 == 0) {
+                            arr[i] = 0;
+                        }
+                        if (i % 4 == 1) {
+                            arr[i] = 0;
+                        }
+                        if (i % 4 == 2) {
+                            arr[i] = 0;
+                        }
+                        //说明是alpha通道...
+                        if (i % 4 == 3) {
+                            arr[i] = 255 - arr[i];
+                        }
+                    });
+                    osCtx1.putImageData(osData1, 0, 0);
+                    //先把path取反选区保存起来.............................................................................
+
+                    //osCtx1 的onmouseMove事件...........................................................................
+                    osCan1.onmousedown = function (e) {
+                        ifDragging = true;
+                        mouseDown.x = e.clientX;
+                        mouseDown.y = e.clientY;
+                    }
+
+                    window.onmousemove = function (e) {
+                        if (ifDragging) {
+                            dx = e.clientX - mouseDown.x;
+                            dy = e.clientY - mouseDown.y;
+                            draw();
+                        }
+                    }
+
+                    window.onmouseup = function (e) {
+                        ifDragging = false;
+                        bgParas.x += dx;
+                        bgParas.y += dy;
+                        dx = 0;
+                        dy = 0;
+                    }
+
+                    $(window).mousewheel(function (e, delta) {
+                        var e = e || event;
+                        e.preventDefault();	//阻止页面的默认滚动。
+
+                        //delta可能是-1 1
+                        console.log(delta);
+                        if (delta == 1) {
+                            bgParas.RATE -= 0.1;
+                        } else {
+                            bgParas.RATE += 0.1;
+                        }
+                        draw();
+                    })
+
+
+                    function draw() {
+                        osCtx2.clearRect(0, 0, osCan2.width, osCan2.height);
+                        osCtx2.drawImage(imgLoadedJson.background, 0, 0, bgParas.w, bgParas.h, bgParas.x + dx, bgParas.y + dy, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
+                    }
+
+
+                    //合成按钮...................................................
+                    $('#combine').click(function () {
+
+                        var osData2 = osCtx2.getImageData(0, 0, staticParas.w, staticParas.h);
+
+
+                        //osContext1 1里面存了
+                        [].forEach.call(osData2.data, function (e, i, arr) {
+                            //说明是alpha通道
+                            if (i % 4 == 3)
+                                osData2.data[i] = 255 - osData1.data[i];
+                        });
+                        uiCtx.putImageData(osData2, 0, 0);
+
+                    })
+                }
+            }
+        });
+
+
+    }
+</script>
+</body>
+</html>
