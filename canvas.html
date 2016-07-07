@@ -11,7 +11,6 @@
 
         body {
             box-sizing: border-box;
-
         }
 
         canvas {
@@ -37,14 +36,6 @@
             top: 0;
             /*z-index: 3;*/
             position: absolute;
-
-        }
-
-        #uiCan {
-
-        }
-
-        #btnCollection {
 
         }
 
@@ -81,11 +72,11 @@
     onload = function () {
         window.searchJson = searchJson = window.location.search.searchToJson();
         if (!searchJson.imgurl) {
-            alert('一定要从搜索页跳转过来,不然不能用的哟~');
+            alert('没有带imgUrl');
             return;
         }
 
-        //dom......................................................................
+        //dom..................................................................
         //离屏1画路径 离屏2画背景
         var uiCan = document.getElementById('uiCan');
         var uiCtx = uiCan.getContext('2d');
@@ -94,20 +85,21 @@
         var osCan2 = document.getElementById('osCan2');
         var osCtx2 = osCan2.getContext('2d');
         var domImg = document.getElementsByTagName('img')[0];
+        var osData1=null;
 
 
-        //imgSource................................................................
+        //imgSource............................................................
         var imgArr = [
             {"name": "path", "src": "img/path.png"}
         ];
 
-        //paras...
+        //paras................................................................
         var staticParas = {w: 400, h: 200};
         var pathParas = {x: 0, y: 0, RATE: 0.9, w: 417, h: 208};
         var backgroundParas = {x: 0, y: 0, RATE: 2, w: 1000, h: 1000};
         var bgParas = backgroundParas;
 
-        //mousemoveparas...
+        //mousemoveparas.......................................................
         var mouseDown = {x: 0, y: 0};
         var dx = 0, dy = 0;
         var ifDragging = false;
@@ -146,116 +138,124 @@
                             domImg.src = 'data:image/png;base64,' + laosunData;
 
 
-                            //Start.........................................................
-                            //图片加载完 source有了..............
-                            //先把path取反选区保存起来............................................................................
-                            osCtx1.drawImage(imgLoadedJson.path, 0, 0, pathParas.w, pathParas.h, pathParas.x, pathParas.y, pathParas.w * pathParas.RATE, pathParas.h * pathParas.RATE);
-                            osCtx2.drawImage(domImg, 0, 0, bgParas.w, bgParas.h, bgParas.x, bgParas.y, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
-
-
-                            //修改了osData1..........
-                            var osData1 = osCtx1.getImageData(0, 0, staticParas.w, staticParas.h);
-                            [].forEach.call(osData1.data, function (e, i, arr) {
-                                if (i % 4 == 0) {
-                                    arr[i] = 0;
-                                }
-                                if (i % 4 == 1) {
-                                    arr[i] = 0;
-                                }
-                                if (i % 4 == 2) {
-                                    arr[i] = 0;
-                                }
-                                //说明是alpha通道...
-                                if (i % 4 == 3) {
-                                    arr[i] = 255 - arr[i];
-                                }
-                            });
-                            osCtx1.putImageData(osData1, 0, 0);
-                            //先把path取反选区保存起来.............................................................................
-
-                            //osCtx1 的onmouseMove事件...........................................................................
-                            osCan1.onmousedown = function (e) {
-                                ifDragging = true;
-                                mouseDown.x = e.clientX;
-                                mouseDown.y = e.clientY;
-                            }
-
-                            window.onmousemove = function (e) {
-                                if (ifDragging) {
-                                    dx = e.clientX - mouseDown.x;
-                                    dy = e.clientY - mouseDown.y;
-                                    draw();
-                                }
-                            }
-
-                            window.onmouseup = function (e) {
-                                ifDragging = false;
-                                bgParas.x += dx;
-                                bgParas.y += dy;
-                                dx = 0;
-                                dy = 0;
-                            }
-
-                            $(window).mousewheel(function (e, delta) {
-                                var e = e || event;
-                                e.preventDefault();	//阻止页面的默认滚动。
-
-                                //delta可能是-1 1
-//                                console.log(delta);
-                                if (delta == 1) {
-                                    bgParas.RATE -= 0.1;
-                                } else {
-                                    bgParas.RATE += 0.1;
-                                }
-                                draw();
-                            })
-
-
-                            function draw() {
-                                osCtx2.clearRect(0, 0, osCan2.width, osCan2.height);
-                                osCtx2.drawImage(domImg, 0, 0, bgParas.w, bgParas.h, bgParas.x + dx, bgParas.y + dy, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
-                            }
-
-
-                            //合成按钮...................................................
-                            $('#combine').click(function () {
-
-                                var osData2 = osCtx2.getImageData(0, 0, staticParas.w, staticParas.h);
-
-
-                                //osContext1 1里面存了
-                                [].forEach.call(osData2.data, function (e, i, arr) {
-                                    //说明是alpha通道
-                                    if (i % 4 == 3)
-                                        osData2.data[i] = 255 - osData1.data[i];
-                                });
-                                uiCtx.putImageData(osData2, 0, 0);
-
-                            });
-
-
-                            $('#upload').click(function () {
-                                dataUrl = uiCan.toDataURL();
-
-                                $.ajax({
-                                    type: "post",
-                                    url: 'http://n1.jimi.la/apps_T1/Lip/uploadPic.php',
-                                    data: {
-                                        //嘴
-                                        type: 1,
-                                        objid: searchJson.objid,
-                                        imgString: dataUrl.substring(22),
-                                    },
-                                    success: function (data) {
-                                        console.log(JSON.stringify(data));
-
-                                    },
-                                    error: function (err) {
-                                        console.log('ERROR!')
-                                        console.log(err);
+                            appPathInit();
+                            function appPathInit() {
+                                //先把path取反选区保存起来............................................................................
+                                osCtx1.drawImage(imgLoadedJson.path, 0, 0, pathParas.w, pathParas.h, pathParas.x, pathParas.y, pathParas.w * pathParas.RATE, pathParas.h * pathParas.RATE);
+                                //修改了osData1....................................
+                                osData1 = osCtx1.getImageData(0, 0, staticParas.w, staticParas.h);
+                                [].forEach.call(osData1.data, function (e, i, arr) {
+                                    if (i % 4 == 0) {
+                                        arr[i] = 0;
                                     }
+                                    if (i % 4 == 1) {
+                                        arr[i] = 0;
+                                    }
+                                    if (i % 4 == 2) {
+                                        arr[i] = 0;
+                                    }
+                                    //说明是alpha通道...
+                                    if (i % 4 == 3) {
+                                        arr[i] = 255 - arr[i];
+                                    }
+                                });
+                                osCtx1.putImageData(osData1, 0, 0);
+                                //先把path取反选区保存起来.............................................................................
+                            }
+
+                            appCombine();
+                            function appCombine() {
+                                //Start.........................................................
+                                //图片加载完 source有了...........................
+
+
+                                osCtx2.drawImage(domImg, 0, 0, bgParas.w, bgParas.h, bgParas.x, bgParas.y, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
+
+
+                                //osCtx1 的onmouseMove事件...........................................................................
+                                osCan1.onmousedown = function (e) {
+                                    ifDragging = true;
+                                    mouseDown.x = e.clientX;
+                                    mouseDown.y = e.clientY;
+                                }
+
+                                window.onmousemove = function (e) {
+                                    if (ifDragging) {
+                                        dx = e.clientX - mouseDown.x;
+                                        dy = e.clientY - mouseDown.y;
+                                        draw();
+                                    }
+                                }
+
+                                window.onmouseup = function (e) {
+                                    ifDragging = false;
+                                    bgParas.x += dx;
+                                    bgParas.y += dy;
+                                    dx = 0;
+                                    dy = 0;
+                                }
+
+                                $(window).mousewheel(function (e, delta) {
+                                    var e = e || event;
+                                    e.preventDefault();	//阻止页面的默认滚动。
+
+                                    //delta可能是-1 1
+//                                console.log(delta);
+                                    if (delta == 1) {
+                                        bgParas.RATE -= 0.1;
+                                    } else {
+                                        bgParas.RATE += 0.1;
+                                    }
+                                    draw();
                                 })
-                            })
+
+
+                                function draw() {
+                                    osCtx2.clearRect(0, 0, osCan2.width, osCan2.height);
+                                    osCtx2.drawImage(domImg, 0, 0, bgParas.w, bgParas.h, bgParas.x + dx, bgParas.y + dy, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
+                                }
+
+
+                                //合成按钮...................................................
+                                $('#combine').click(function () {
+
+                                    var osData2 = osCtx2.getImageData(0, 0, staticParas.w, staticParas.h);
+
+                                    //osContext1 1里面存了
+                                    [].forEach.call(osData2.data, function (e, i, arr) {
+                                        //说明是alpha通道
+                                        if (i % 4 == 3)
+                                            osData2.data[i] = 255 - osData1.data[i];
+                                    });
+                                    uiCtx.putImageData(osData2, 0, 0);
+
+                                });
+
+
+                                $('#upload').click(function () {
+                                    dataUrl = uiCan.toDataURL();
+
+                                    $.ajax({
+                                        type: "post",
+                                        url: 'http://n1.jimi.la/apps_T1/Lip/uploadPic.php',
+                                        data: {
+                                            //嘴
+                                            type: 1,
+                                            objid: searchJson.objid,
+                                            imgString: dataUrl.substring(22),
+                                        },
+                                        success: function (data) {
+                                            console.log(JSON.stringify(data));
+                                        },
+                                        error: function (err) {
+                                            console.log('ERROR!')
+                                            console.log(err);
+                                        }
+                                    })
+                                })
+                            }
+
+
                         },
                         error: function (err) {
                             console.log('ERROR!')
