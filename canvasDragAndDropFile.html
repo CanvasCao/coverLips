@@ -70,7 +70,10 @@
 <script src='js/searchToJson/searchToJson.js'></script>
 <script>
     onload = function () {
+        //type=1 是嘴唇 type=2 腮红
         window.searchJson = searchJson = window.location.search.searchToJson();
+        var type=searchJson.type||1;//路径的种类
+
 
         //dom..................................................................
         //离屏1画路径 离屏2画背景
@@ -84,14 +87,21 @@
         var osData1 = null;
 
         //imgSource............................................................
+
         var imgArr = [
-            {"name": "path", "src": "img/path.png"}
+            {"name": "path", "src": "img/path"+type+".png"}
         ];
 
         //paras................................................................
         var staticParas = {w: 400, h: 200};
-        var pathParas = {x: 0, y: 0, RATE: 0.9, w: 417, h: 208};
-        var backgroundParas = {x: 0, y: 0, RATE: 2, w: 1000, h: 1000};
+        var pathParas =null;
+        if(type==1){
+            pathParas= {x: 0, y: 0, RATE: 0.95, w: 417, h: 208};//嘴唇的大小就是417和208
+        }
+        else if(type==2){
+            pathParas= {x: 0, y: 0, RATE: 0.5, w: 400, h: 400};
+        }
+        var backgroundParas = {x: 0, y: 0, RATE: 2, w: 1000, h: 1000};//背景图的参数
         var bgParas = backgroundParas;
 
         //mousemoveparas.......................................................
@@ -259,7 +269,7 @@
                     url: 'http://n1.jimi.la/apps_T1/Lip/uploadPic.php',
                     data: {
                         //嘴
-                        type: 1,
+                        type: type,
                         objid: searchJson.objid,
                         imgString: dataUrl.substring(22),
                     },
