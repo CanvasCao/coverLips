@@ -72,13 +72,16 @@
     onload = function () {
         //type=1 是嘴唇 type=2 腮红
         window.searchJson = searchJson = window.location.search.searchToJson();
-        var type=searchJson.type||1;//路径的种类
+        var type = searchJson.type || 1;//路径的种类
 
 
-        //dom..................................................................
-        //离屏1画路径 离屏2画背景
+        //uiCan是路径和背景图片合成的canvas......................................
         var uiCan = document.getElementById('uiCan');
         var uiCtx = uiCan.getContext('2d');
+
+        //can1是 用来写拖动事件的dom...............................
+        //domImg6用来保存图片 并非显示..............................
+        //can2 用canvas的形式来显示domImg的图片.....................
         var osCan1 = document.getElementById('osCan1');
         var osCtx1 = osCan1.getContext('2d');
         var osCan2 = document.getElementById('osCan2');
@@ -87,19 +90,21 @@
         var osData1 = null;
 
         //imgSource............................................................
-
         var imgArr = [
-            {"name": "path", "src": "img/path"+type+".png"}
+            {"name": "path", "src": "img/path" + type + ".png"}
         ];
 
         //paras................................................................
         var staticParas = {w: 400, h: 200};
-        var pathParas =null;
-        if(type==1){
-            pathParas= {x: 0, y: 0, RATE: 0.95, w: 417, h: 208};//嘴唇的大小就是417和208
+        var pathParas = null;
+        if (type == 1) {
+            pathParas = {x: 0, y: 0, RATE: 0.95, w: 417, h: 208};//嘴唇的大小就是417和208
+
         }
-        else if(type==2){
-            pathParas= {x: 0, y: 0, RATE: 0.5, w: 400, h: 400};
+        else if (type == 2) {
+            pathParas = {x: 0, y: 0, RATE: 0.5, w: 400, h: 400};
+            //下面的合成图如果是type2需要是正方形..............
+            uiCan.setAttribute('width','200px');
         }
         var backgroundParas = {x: 0, y: 0, RATE: 2, w: 1000, h: 1000};//背景图的参数
         var bgParas = backgroundParas;
@@ -159,18 +164,19 @@
 //                reader.result是图片转62进制以后的字符串
 //                            console.log(that.result);
 
+                            //
                             appCombine();
                         }
                     }
-
 
                 }
             }
         });
 
 
+        //遍历canvas像素点的通道 alpha取反后立刻放回原canvas...................................
         function appPathInit() {
-            //先把path取反选区保存起来............................................................................
+            //先把path取反选区保存起来...........................................................
             osCtx1.drawImage(imgLoadedJson.path, 0, 0, pathParas.w, pathParas.h, pathParas.x, pathParas.y, pathParas.w * pathParas.RATE, pathParas.h * pathParas.RATE);
             //修改了osData1....................................
             osData1 = osCtx1.getImageData(0, 0, staticParas.w, staticParas.h);
@@ -190,15 +196,14 @@
                 }
             });
             osCtx1.putImageData(osData1, 0, 0);
-            //先把path取反选区保存起来.............................................................................
+            //先把path取反选区保存起来.......................................................
         }
 
+        //添加鼠标移动事件和滚轮事件
         function appCombine() {
             //Start.........................................................
             //图片加载完 source有了...........................
-
-
-            osCtx2.drawImage(domImg, 0, 0, bgParas.w, bgParas.h, bgParas.x, bgParas.y, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
+            //osCtx2.drawImage(domImg, 0, 0, bgParas.w, bgParas.h, bgParas.x, bgParas.y, bgParas.w * bgParas.RATE, bgParas.h * bgParas.RATE);
 
 
             //osCtx1 的onmouseMove事件...........................................................................
@@ -229,7 +234,7 @@
                 e.preventDefault();	//阻止页面的默认滚动。
 
                 //delta可能是-1 1
-//                                console.log(delta);
+                //console.log(delta);
                 if (delta == 1) {
                     bgParas.RATE -= 0.1;
                 } else {
